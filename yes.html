@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Planificador de Gastos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+            margin: auto;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            width: 90%;
+            max-width: 350px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .delete-btn {
+            background-color: red;
+            color: white;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+        }
+        .delete-btn:hover {
+            background-color: darkred;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #e9ecef;
+            margin: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Planificador de Gastos</h1>
+
+        <h2>Presupuesto: S/ <span id="presupuesto">0.00</span></h2>
+        <h3>Saldo Restante: S/ <span id="restante">0.00</span></h3>
+        <h3>💰 Ahorro Total: S/ <span id="ahorro">0.00</span></h3>
+
+        <h2>💰 Establecer Presupuesto</h2>
+        <input type="number" id="inputPresupuesto" step="0.01" placeholder="Ingrese presupuesto">
+        <button onclick="establecerPresupuesto()">Guardar Presupuesto</button>
+
+        <h2>➕ Añadir Gasto</h2>
+        <input type="text" id="categoria" placeholder="Categoría (Ej: Comida, Ahorro)" required>
+        <input type="number" id="monto" step="0.01" placeholder="Monto" required>
+        <button onclick="agregarGasto()">Agregar</button>
+
+        <h2>📜 Historial de Gastos</h2>
+        <ul id="historial">
+            <!-- Gastos se agregarán aquí dinámicamente -->
+        </ul>
+    </div>
+
+    <script>
+        let presupuesto = 0;
+        let saldoRestante = 0;
+        let ahorroTotal = 0;
+        let gastos = [];
+
+        function establecerPresupuesto() {
+            let input = document.getElementById("inputPresupuesto").value;
+            if (input && input > 0) {
+                presupuesto = parseFloat(input);
+                saldoRestante = presupuesto;
+                actualizarUI();
+            } else {
+                alert("Ingrese un presupuesto válido.");
+            }
+        }
+
+        function agregarGasto() {
+            let categoria = document.getElementById("categoria").value.trim();
+            let monto = parseFloat(document.getElementById("monto").value);
+            
+            if (categoria === "" || isNaN(monto) || monto <= 0) {
+                alert("Ingrese una categoría y un monto válido.");
+                return;
+            }
+
+            if (monto > saldoRestante) {
+                alert("No tienes suficiente saldo disponible.");
+                return;
+            }
+
+            // Si la categoría es "Ahorro", se suma al ahorro total Y se resta del saldo restante
+            if (categoria.toLowerCase() === "ahorro") {
+                ahorroTotal += monto;
+            }
+
+            // Siempre se resta del saldo restante, sin importar la categoría
+            saldoRestante -= monto;
+
+            gastos.push({ categoria, monto });
+            actualizarUI();
+            document.getElementById("categoria").value = "";
+            document.getElementById("monto").value = "";
+        }
+
+        function eliminarGasto(index) {
+            let gasto = gastos[index];
+
+            // Si era "Ahorro", se resta del ahorro total
+            if (gasto.categoria.toLowerCase() === "ahorro") {
+                ahorroTotal -= gasto.monto;
+            }
+
+            // El monto eliminado vuelve al saldo restante
+            saldoRestante += gasto.monto;
+
+            gastos.splice(index, 1);
+            actualizarUI();
+        }
+
+        function actualizarUI() {
+            document.getElementById("presupuesto").textContent = presupuesto.toFixed(2);
+            document.getElementById("restante").textContent = saldoRestante.toFixed(2);
+            document.getElementById("ahorro").textContent = ahorroTotal.toFixed(2);
+
+            let lista = document.getElementById("historial");
+            lista.innerHTML = "";
+            gastos.forEach((g, index) => {
+                let li = document.createElement("li");
+                li.innerHTML = `${g.categoria} - S/ ${g.monto.toFixed(2)}
+                    <button class="delete-btn" onclick="eliminarGasto(${index})">🗑️</button>`;
+                lista.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
